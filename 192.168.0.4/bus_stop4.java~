@@ -1,0 +1,131 @@
+import java.io.*;
+import java.net.*;
+
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
+//self address => 192.168.0.4
+//self location => erode
+//destinations => salem,tirupur
+class erode {
+    public static void main(String[] args) {
+
+  	String[] split_form;
+	String[] destination;
+	destination=new String[2];
+	String[] recv_data;
+	
+	int nearest_stations=2;
+	String myaddr="192.168.0.4";
+	String packheader=myaddr;	
+	destination[0]="192.168.0.3";
+	destination[1]="192.168.0.5";	
+	int[] ns;
+	ns=new int[4];
+	ns[0]=9878;
+	ns[1]=9880;
+	String logSentence="";String place="";
+	while(true)
+	{
+	try{
+	DatagramSocket serverSocket = new DatagramSocket(9879);
+
+// to get date
+	Calendar cal=Calendar.getInstance();
+	SimpleDateFormat sdf=new SimpleDateFormat("'\nDate:\t'dd-MM-yyyy '\nTime:\t'HH:mm:ss");
+	String current_date=sdf.format(cal.getTime());
+
+            byte[] receiveData = new byte[1024];
+            byte[] sendData = new byte[1024];
+
+         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+         serverSocket.receive(receivePacket);
+	int port = receivePacket.getPort();
+    
+         String sentence = new String( receivePacket.getData());
+	System.out.println(sentence);
+	 recv_data=sentence.split("\\|");
+       	 
+	 sentence=myaddr;
+if(port==9876)
+		place="Chennai";
+	else if(port==9877)
+		place="Vellore";
+	else if(port==9878)
+		place="Salem";
+	else if(port==9879)
+		place="Erode";
+	else if(port==9880)
+		place="Coimbatore";
+	
+	String frominfo="Message Received from "+place+" <==> "+recv_data[0]+"::"+port;
+		for(int j=1;j<recv_data.length-1;j++)
+			sentence+="|"+recv_data[j];
+//System.out.println(recv_data.length);
+sentence+="|dummy";
+	//to write content to file
+	FileWriter fstream=new FileWriter("erode_stop_log.txt",true);
+	BufferedWriter out=new BufferedWriter(fstream);
+       	//preparing content
+	
+	logSentence="\n-----------------------------------------------------";
+	logSentence+="\n"+current_date;
+	logSentence+="\nIP Address:\t"+recv_data[1];
+	logSentence+="\nCountry:\t"+recv_data[2];
+	logSentence+="\nStation:\t"+recv_data[3];
+	logSentence+="\nX- Coordinates:\t"+recv_data[4];
+	logSentence+="\nY- Coordinates:\t"+recv_data[5];
+	logSentence+="\n-----------------------------------------------------";
+	//writing to log file
+	out.write(logSentence);
+	out.close();
+	
+
+		if(recv_data[0].equals("frombus"))
+			{
+			     for(int i=0;i<nearest_stations;i++)
+				{
+      			     	InetAddress IPAddress = InetAddress.getByName("localhost");
+				sendData = sentence.getBytes();
+				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, ns[i]);
+		                serverSocket.send(sendPacket);
+				}
+				//serverSocket.close();
+			}
+		else
+			{
+				InetAddress IPAddress1;
+				if(port==ns[0])
+				{
+				 IPAddress1 = InetAddress.getByName("localhost");	
+				sendData = sentence.getBytes();
+				 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress1, ns[1]);
+				
+				//sendData = sentence.getBytes();
+		                serverSocket.send(sendPacket);
+				}				
+				else if(port==ns[1])
+				{
+				IPAddress1 = InetAddress.getByName("localhost");
+				sendData = sentence.getBytes();
+				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress1, ns[0]);
+				
+		                serverSocket.send(sendPacket);
+				}
+
+			}	
+System.out.println(frominfo);
+			 System.out.println(logSentence);
+			
+             serverSocket.close();
+
+	}
+	catch (FileNotFoundException e) {
+            System.err.println("FileStreamsTest: " + e);
+        }
+	 catch (IOException e) {
+            System.err.println("FileStreamsTest: " + e);
+        }
+
+}
+} 
+}

@@ -1,0 +1,98 @@
+import java.io.*;
+import java.net.*;
+
+class mobilebus {
+    public static void main(String[] args) {
+        try {
+        File inputFile = new File("bus_track_info.txt");
+  	String mS = new String();
+	String[] split_form;
+	String[] destination;
+	destination=new String[6];
+	String packheader="frombus";
+	int i,c;
+	
+	String nearest_station="";
+		int[] port;
+	port=new int[6];
+	int ns=0;
+	port[0]=9876;
+	port[1]=9877;
+	port[2]=9878;
+	port[3]=9879;
+	port[4]=9880;
+
+	
+	while(true)
+	{
+FileInputStream fis = new FileInputStream(inputFile);
+        	int dummy=System.in.read();	
+		destination[0]="192.168.0.2";
+	destination[1]="192.168.0.3";
+	destination[2]="192.168.0.4";
+	destination[3]="192.168.0.5";
+	destination[4]="192.168.0.6";
+	
+
+            while ((c = fis.read()) != -1) {
+			mS+=(char)c;
+            }
+
+            fis.close();
+	split_form=mS.split(",",12);
+	
+	System.out.println(split_form[1]);
+	System.out.println(split_form[3]);
+	System.out.println(split_form[4]);
+        System.out.println(split_form[8]);
+        System.out.println(split_form[9]);
+
+	if(split_form[4].equals("chennai"))
+	{	
+		nearest_station=destination[0];
+		ns=port[0];
+	}
+	else if(split_form[4].equals("salem"))
+	{
+		nearest_station=destination[1];
+		ns=port[1];
+	}
+	else if(split_form[4].equals("erode"))
+	{
+		nearest_station=destination[2];
+		ns=port[2];
+	}
+	else if(split_form[4].equals("tirupur"))
+	{
+		nearest_station=destination[3];
+		ns=port[3];
+	}
+	else if(split_form[4].equals("coimbatore"))
+	{
+		nearest_station=destination[4];
+		ns=port[4];
+	}
+	else
+	{
+	}
+//System.out.println(ns);
+      DatagramSocket clientSocket = new DatagramSocket();
+      InetAddress IPAddress = InetAddress.getByName("localhost");
+      byte[] sendData = new byte[1024];
+      byte[] receiveData = new byte[1024];
+      String sentence = packheader+"|"+split_form[1]+"|"+split_form[3]+"|"+split_form[4]+"|"+split_form[8]+"|"+split_form[9]+"|dummy";
+      sentence=sentence+"\0";
+      sendData = sentence.getBytes();
+      DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, ns);
+      clientSocket.send(sendPacket);
+      clientSocket.close();
+	}
+        } 
+	catch (FileNotFoundException e) {
+            System.err.println("FileStreamsTest: " + e);
+        }
+	 catch (IOException e) {
+            System.err.println("FileStreamsTest: " + e);
+        }
+    }
+}
